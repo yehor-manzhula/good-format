@@ -8,7 +8,7 @@ Maintainer: [Yehor Manzhula][author-github]
 Due to lack of customization in good-console plugin new plugin come up.
 With possibilities set font colors, styles formatting etc. 
 
-Author was inspired by [GraphQl][graphql-npm-url] and [colors][colors-npm-url] packages.
+Author was inspired by [GraphQl][graphql-npm-url] and [colors][colors-npm-url] packages, the last one is used for coloring and styling fonts.
 
 ## Usage
 
@@ -70,7 +70,66 @@ Below examples of default output for the event type:
 
 ## Customization
 
-Change output to custom fields
+#### Inroduction
+
+Under the hood good-format operates with two basic abstractions:
+
+- Templates - function that process template and call formatters chain with value of given keys when event poped-up
+   To define new template template function should be used.
+
+   **Important!** Pay attention that event keys should be wrapped in quotes or singlequotes but formatters invocation - not.
+
+```javascript
+    const GoodFormat = require('good-format');
+    const {template} = GoodFormat;
+
+    const opsTemplate = template`Uptime is: ${'proc.uptime'}` // Will retrieve proc.uptime value and output it
+```
+
+- Formatters  - function that process given key value
+    To define new formatter - formatter function should be used.
+
+```javascript
+    const GoodFormat = require('good-format');
+    const {template, formatter} = GoodFormat;
+
+    /**
+      * Round bytes value to Mb
+      * 
+      * @param {int} value Value to be processed
+      * @returns {float}
+      */
+    const bytesToMb = formatter(value => {
+        const mb = Math.round(value) / (1024 * 1024)
+        return Math.round(mb * 100) / 100;
+    });
+
+    // Memory info partial
+    const memoryTemplate = template`${bytesToMb('proc.mem.rss')}`;
+```
+
+Wide list of built-in formatters already available
+
+```javascript
+    const GoodFormat = require('good-format');
+
+    const {template,
+        // Time
+        timestamp,
+        // Fonts and colors 
+        font,
+        // Objects 
+        stringify, 
+        // Math
+        math, 
+        // Strings
+        toUpper, 
+        toLower, 
+        toString, 
+        capitalize} = GoodFormat;    
+```
+
+#### Change output to custom fields
 
 ```javascript
     const GoodFormat = require('good-format');
@@ -97,7 +156,7 @@ Change output to custom fields
     };
 ```
 
-Format output font styles
+#### Format output font styles
 
 ```javascript
     const GoodFormat = require('good-format');
@@ -124,7 +183,7 @@ Format output font styles
     };
 ```
 
-Use custom theme for font formatting
+#### Use custom theme for font formatting
 
 ```javascript
     const GoodFormat = require('good-format');
@@ -160,7 +219,7 @@ Use custom theme for font formatting
     };
 ```
 
-Choose font theme/color/style based on value
+#### Choose font theme/color/style based on value
 
 ```javascript
     const GoodFormat = require('good-format');
@@ -237,7 +296,7 @@ Choose font theme/color/style based on value
     };
 ```
 
-Use partials for template separation
+#### Use partials for template separation
 
 ```javascript
     const GoodFormat = require('good-format');
@@ -275,7 +334,7 @@ Use partials for template separation
     };
 ```
 
-Custom formatting function
+#### Custom formatting function
 
 ```javascript
     const GoodFormat = require('good-format');
