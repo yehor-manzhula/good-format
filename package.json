@@ -1,6 +1,6 @@
 {
   "name": "good-format",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Good format",
   "dependencies": {
     "colors": "^1.3.3",
