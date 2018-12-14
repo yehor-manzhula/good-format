@@ -15,7 +15,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git@github-yehor-manzhula:yehor-manzhula/good-format.git"
+    "url": "git@github.com:yehor-manzhula/good-format.git"
   },
   "keywords": [
     "hapijs",
