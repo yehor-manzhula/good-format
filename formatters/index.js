@@ -1,8 +1,10 @@
-// Assign strings methods to top level
+/***
+ * Assign string methods to top level
+ */
 module.exports = Object.assign(require('./string'), {
     font: require('./font'),
+    math: require('./math'),
     template: require('./template'),
     timestamp: require('./timestamp'),
-    math: require('./math'),
     formatter: require('./formatter')
 });

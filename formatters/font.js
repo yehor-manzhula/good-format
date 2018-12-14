@@ -4,6 +4,19 @@ const colors = require('colors');
 
 const formatter = require('./formatter');
 
+/**
+ * Formats value with given color or style
+ * 
+ * @param  {*} key
+ * @param  {String|Object|Function} color='' Color or style, theme object or style getter predicate
+ * @returns {String}
+ * 
+ * @example
+ * 
+ * new GoodFormat({
+ *      error: template`${font('error.message', 'red')}`
+ * });
+ */
 function font(key, color = '') {
     return formatter(value => {
         let colorName = color;
@@ -37,7 +50,19 @@ function font(key, color = '') {
     })(key);
 }
 
-// Add to font object custom methods
+/**
+ * Adds theme methods to font formatter
+ * 
+ * @example
+ * 
+ * font.setTheme({
+ *      error: ['red', 'bold']
+ * });
+ * 
+ * new GoodFormat({
+ *      error: template`${font.error('error.message')}`
+ * });
+ */
 font.setTheme = theme => {
     colors.setTheme(theme);
 
@@ -46,6 +71,9 @@ font.setTheme = theme => {
     });
 };
 
+/**
+ * Available font styles
+ */
 const fontStyles = [
     'bold',
     'dim',
@@ -56,12 +84,21 @@ const fontStyles = [
     'strikethrough'
 ];
 
+/**
+ * All the available colors could be found here 
+ * {@link https://www.npmjs.com/package/colors|colors}
+ */
 const fontColors = Object.keys(colors.styles)
     .filter(style => !fontStyles.includes(style));
 
-// Add colors and styles to font
-// .font
-// .green    
+/**
+ * Add colors and styles to font formatter
+ *
+ * @example
+ * 
+ * template`${font.red('error.message')}`
+ * template`${font.bold('error.message')}`  
+ */
 [...fontColors, ...fontStyles].forEach(style => {
     font[style] = (key, additional) => {
         style += additional ? `.${additional}` : '';
@@ -69,17 +106,27 @@ const fontColors = Object.keys(colors.styles)
     };
 });
 
+/**
+ * Add styles to colors methods of font formatter
+ *
+ * @example
+ * 
+ * template`${font.red.bold('error.message')}`  
+ */
 fontColors.forEach(color => {
-    // Add styles to colors
-    // font.green.bold
     fontStyles.forEach(style => {
         font[color][style] = key => font[color](key, style);
     });
 });
 
+/**
+ * Add colors to style methods of font formatter
+ *
+ * @example
+ * 
+ * template`${font.bold.red('error.message')}`  
+ */
 fontStyles.forEach(style => {
-    // Added colors to styles
-    // font.bold.green
     fontColors.forEach(color => {
         font[style][color] = (key) => font[style](key, color);
     });

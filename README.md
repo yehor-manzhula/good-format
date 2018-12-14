@@ -32,13 +32,6 @@ In manifest.js
                 ...
                 plugin: 'good',
                 options: {
-                    includes: {
-                        request: ['headers', 'payload'],
-                        response: ['payload']
-                    },
-                    ops: {
-                        interval: 1000
-                    },
                     reporters: {
                         consoleReporter: [
                             new GoodFormat(),
@@ -75,7 +68,253 @@ Below examples of default output for the event type:
 
 ## Customization
 
+Change output to custom fields
 
+    const GoodFormat = require('good-format');
+    const {template} = GoodFormat;
+
+    module.exports = {
+        ...
+        register: {
+            plugins: {
+                ...
+                plugin: 'good',
+                options: {
+                    reporters: {
+                        consoleReporter: [
+                            new GoodFormat({
+                                ops: template`Uptime is: ${'proc.uptime'}`
+                            }),
+                            'stdout']
+                    } 
+                }
+                ...
+            }
+        }
+    };
+
+Format output font styles
+
+    const GoodFormat = require('good-format');
+    const {template, font} = GoodFormat;
+
+    module.exports = {
+        ...
+        register: {
+            plugins: {
+                ...
+                plugin: 'good',
+                options: {
+                    reporters: {
+                        consoleReporter: [
+                            new GoodFormat({
+                                ops: template`Uptime is: ${font.red.bold('proc.uptime')}`
+                            }),
+                            'stdout']
+                    } 
+                }
+                ...
+            }
+        }
+    };
+
+Use custom theme for font formatting
+
+    const GoodFormat = require('good-format');
+    const {template, font} = GoodFormat;
+
+    /**
+      * Add custom theme to font formatter
+      */
+    font.setTheme({
+        info: ['blue', 'bold'],
+        error: ['red', 'bold']
+    });
+
+    module.exports = {
+        ...
+        register: {
+            plugins: {
+                ...
+                plugin: 'good',
+                options: {
+                    reporters: {
+                        consoleReporter: [
+                            new GoodFormat({
+                                error: template`Error message: ${font.error('error.message') stack: ${font.error('error.stack')}}`,
+                                ops: template`Uptime is: ${font.info('proc.uptime')}`
+                            }),
+                            'stdout']
+                    } 
+                }
+                ...
+            }
+        }
+    };
+
+Choose font theme/color/style based on value
+
+    const GoodFormat = require('good-format');
+    const {template, font} = GoodFormat;
+
+    /**
+      * Add custom theme to font formatter
+      */
+    font.setTheme({
+        info: ['blue', 'bold'],
+        error: ['red', 'bold']
+    });
+
+    /**
+      * Returns theme name depending on code
+      * 
+      * @param {int} statusCode
+      * @returns {string} 
+      */
+    const statusCodeColor = statusCode => {
+        if (statusCode >= 500) {
+            return 'error';
+        } 
+        
+        if (statusCode >= 400) {
+            return 'warn';
+        } 
+        
+        if (statusCode >= 300) {
+            return 'info';
+        }
+        
+        return 'success';
+    };
+
+    /**
+      * Returns theme name depending on HTTP method
+      * 
+      * @param {String} method
+      * @returns {String} 
+      */
+    const methodColor = method => {
+        return ({
+            GET: 'info',
+            POST: 'success',
+            PUT: 'success',
+            DELETE: 'error',
+            OPTIONS: 'warn'
+        })[method.toUpperCase()] || 'info';
+    };
+
+    module.exports = {
+        ...
+        register: {
+            plugins: {
+                ...
+                plugin: 'good',
+                options: {
+                    reporters: {
+                        consoleReporter: [
+                            new GoodFormat({
+                                error: template`Error message: ${font.error('error.message') stack: ${font.error('error.stack')}}`,
+                                ops: template`Uptime is: ${font.info('proc.uptime')}`,
+                                request: template`${general} ${font(method, methodColor)} ${'path'} ${data}`,
+                                response: template`${general} ${font(method, methodColor)} ${'route'} ${query} ${font('statusCode', statusCodeColor)}`
+ 
+                            }),
+                            'stdout']
+                    } 
+                }
+                ...
+            }
+        }
+    };
+
+
+Use partials for template separation
+
+    const GoodFormat = require('good-format');
+    const {template, font} = GoodFormat;
+
+    /**
+      * Add custom theme to font formatter
+      */
+    font.setTheme({
+        info: ['blue', 'bold'],
+        error: ['red', 'bold']
+    });
+
+    const generalInfo = template`PID: ${font.info('pid')}`
+
+    module.exports = {
+        ...
+        register: {
+            plugins: {
+                ...
+                plugin: 'good',
+                options: {
+                    reporters: {
+                        consoleReporter: [
+                            new GoodFormat({
+                                error: template`${generalInfo} Error message: ${font.error('error.message') stack: ${font.error('error.stack')}}`,
+                                ops: template`${generalInfo} Uptime is: ${font.info('proc.uptime')}`
+                            }),
+                            'stdout']
+                    } 
+                }
+                ...
+            }
+        }
+    };
+
+Custom formatting function
+
+    const GoodFormat = require('good-format');
+    const {template, font, formatter} = GoodFormat;
+
+    /**
+      * Add custom theme to font formatter
+      */
+    font.setTheme({
+        info: ['blue', 'bold'],
+        error: ['red', 'bold']
+    });
+   
+    /**
+      * Round bytes value to Mb
+      * 
+      * @param {int} value Value to be processed
+      * @returns {float}
+      */
+    const bytesToMb = formatter(value => {
+        const mb = Math.round(value) / (1024 * 1024)
+        return Math.round(mb * 100) / 100;
+    });
+
+
+    // General info partial
+    const generalInfo = template`PID: ${font.info('pid')}`
+    
+    // Memory info partial
+    const memory = template`${bytesToMb('proc.mem.rss')}`;
+
+    module.exports = {
+        ...
+        register: {
+            plugins: {
+                ...
+                plugin: 'good',
+                options: {
+                    reporters: {
+                        consoleReporter: [
+                            new GoodFormat({
+                                error: template`${generalInfo} Error message: ${font.error('error.message') stack: ${font.error('error.stack')}}`,
+                                ops: template`${generalInfo} Uptime is: ${font.info('proc.uptime')} ${memory}`
+                            }),
+                            'stdout']
+                    } 
+                }
+                ...
+            }
+        }
+    };
 
 [author-github]: <https://github.com/yehor-manzhula>
 [colors-npm-url]: <https://www.npmjs.com/package/colors>

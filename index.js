@@ -4,15 +4,31 @@ const formatters = require('./formatters');
 const SafeStringify = require('json-stringify-safe');
 
 const {template, timestamp, font, toUpper, toString, stringify, math, formatter} = formatters;
+
+/**
+ * Round bytes value to Mb
+ * 
+ * @param {int} value Value to be processed
+ * @returns {float}
+ */
 const bytesToMb = formatter(value => {
     const mb = Math.round(value) / (1024 * 1024)
     return Math.round(mb * 100) / 100;
 });
 
-const load = formatter(value => (value || []).map(item => {
+/**
+ * Round all the items in the given array
+ * 
+ * @param {int} value Value to be processed
+ * @returns {float}
+ */
+const roundAll = formatter(value => (value || []).map(item => {
     return Math.round(item * 100) / 100;
 }));
 
+/**
+ * Add custom theme to font formatter
+ */
 font.setTheme({
     error: ['red', 'bold'],
     success: ['green', 'bold'],
@@ -20,6 +36,12 @@ font.setTheme({
     info: ['blue', 'bold']
 });
 
+/**
+ * Returns theme name depending on code
+ * 
+ * @param {int} statusCode
+ * @returns {string} 
+ */
 const statusCodeColor = statusCode => {
     if (statusCode >= 500) {
         return 'error';
@@ -36,6 +58,12 @@ const statusCodeColor = statusCode => {
     return 'success';
 };
 
+/**
+ * Returns theme name depending on HTTP method
+ * 
+ * @param {String} method
+ * @returns {String} 
+ */
 const methodColor = method => {
     return ({
         GET: 'info',
@@ -46,6 +74,7 @@ const methodColor = method => {
     })[method.toUpperCase()] || 'info';
 };
 
+// Event partials
 const pid = template`PID:${'pid'}`;
 const tags = template`[${toString('tags')}]`;
 const method = template`${toUpper('method')}`;
@@ -62,7 +91,7 @@ const general = template` ${font.info(pid)} ${timestamp('timestamp', 'YYMMDDHHmm
 const internals = {
     defaults: {
         log: template`${general} ${font.info(tags)} ${'data'} ${error}`,
-        ops: template`${general} memory: ${memory}Mb, uptime: ${math.round('proc.uptime')}s, load: [${load('os.load')}]`,
+        ops: template`${general} memory: ${memory}Mb, uptime: ${math.round('proc.uptime')}s, load: [${roundAll('os.load')}]`,
         error: template`${general} ${font.bold(event)} ${error}`,
  
         request: template`${general} ${font.info(tags)} ${font.bold(event)} ${font(method, methodColor)} ${'path'} ${data}`,
