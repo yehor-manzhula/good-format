@@ -1,8 +1,17 @@
 const Hoek = require('hoek');
 const Stream = require('stream');
 const formatters = require('./formatters');
+const SafeStringify = require('json-stringify-safe');
 
-const {template, timestamp, font, toUpper, toString, stringify} = formatters;
+const {template, timestamp, font, toUpper, toString, stringify, math, formatter} = formatters;
+const bytesToMb = formatter(value => {
+    const mb = Math.round(value) / (1024 * 1024)
+    return Math.round(mb * 100) / 100;
+});
+
+const load = formatter(value => (value || []).map(item => {
+    return Math.round(item * 100) / 100;
+}));
 
 font.setTheme({
     error: ['red', 'bold'],
@@ -42,15 +51,22 @@ const tags = template`[${toString('tags')}]`;
 const method = template`${toUpper('method')}`;
 const responseTime = template`(${'responseTime'}ms)`;
 const query = template`${stringify('query')}`;
-const event = template`${'event'}`;
+const data = template`${stringify('data')}`;
+const error = template`${'error.message'}\n${font.error('error.stack')}}`;
 
-const general = template` ${font.info(pid)} ${timestamp('timestamp', 'YYMMDDHHmmssSSS')} ${font.info(tags)}`; 
+const event = template`${'event'}`;
+const memory = template`${bytesToMb('proc.mem.rss')}`;
+
+const general = template` ${font.info(pid)} ${timestamp('timestamp', 'YYMMDDHHmmssSSS')}`; 
 
 const internals = {
     defaults: {
-        response: template`${general} ${font.bold(event)} ${font(method, methodColor)} ${'route'} ${query} ${font('statusCode', statusCodeColor)} ${font.warn(responseTime)}`,
-        error: template`${general} ${font.bold(event)} message: ${'event.error.message'}, stack: ${'event.error.stack'}`,
-        log: template`${general} ${'data'}`
+        log: template`${general} ${font.info(tags)} ${'data'} ${error}`,
+        ops: template`${general} memory: ${memory}Mb, uptime: ${math.round('proc.uptime')}s, load: [${load('os.load')}]`,
+        error: template`${general} ${font.bold(event)} ${error}`,
+ 
+        request: template`${general} ${font.info(tags)} ${font.bold(event)} ${font(method, methodColor)} ${'path'} ${data}`,
+        response: template`${general} ${font.info(tags)} ${font.bold(event)} ${font(method, methodColor)} ${'route'} ${query} ${font('statusCode', statusCodeColor)} ${font.warn(responseTime)}`
     }
 };
 
@@ -62,7 +78,7 @@ class GoodFormat extends Stream.Transform {
 
     _transform(data, enc, next) {
         const formatter = this._settings[data.event];
-        const output = formatter ? formatter(data) : formatters.stringify(data);
+        const output = formatter ? formatter(data) : SafeStringify(data);
 
         return next(null, `${output}\n`);
     }
