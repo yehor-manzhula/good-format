@@ -1,6 +1,6 @@
 {
   "name": "good-format",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "Good format",
   "dependencies": {
     "colors": "^1.3.3",
@@ -23,8 +23,13 @@
     "plugin",
     "format",
     "node",
-    "console"
+    "console",
+    "filter",
+    "good-reporter",
+    "transform-stream",
+    "filtering",
+    "stream"
   ],
   "author": "Yehor Manzhula",
-  "license": "ISC"
+  "license": "MIT"
 }
